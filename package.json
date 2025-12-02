@@ -1,0 +1,28 @@
+{
+  "name": "content-ingest-portal",
+  "version": "1.0.0",
+  "description": "Social Media Content Ingest Portal",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm install && npm run build",
+    "build:server": "cd server && npm install && npm run build",
+    "start": "node server/dist/server.js",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "deploy": "gcloud run deploy content-portal --source . --region us-central1 --allow-unauthenticated"
+  },
+  "keywords": [
+    "content",
+    "portal",
+    "social-media",
+    "upload"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
