@@ -4,6 +4,7 @@ export const uploadSchema = z.object({
   uploaderName: z.string().min(2).max(100),
   uploaderEmail: z.string().email(),
   uploaderPhone: z.string().regex(/^(\+?1?\d{10,14})?$/).optional(),
+  studio: z.string().min(1).max(20),
   category: z.string().min(1).max(50),
   description: z.string().max(280).optional(),
   sourceQrId: z.string().max(50).optional(),

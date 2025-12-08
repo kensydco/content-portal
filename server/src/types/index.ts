@@ -15,6 +15,7 @@ export interface Submission {
   fileId: string;
   fileSizeMb: number;
   uploadDevice: UploadDevice;
+  studio: string;
   category: string;
   description: string | null;
   sourceQrId: string | null;
@@ -36,6 +37,17 @@ export interface Category {
   description: string | null;
   isActive: boolean;
   createdAt: string;
+}
+
+export interface Studio {
+  studioId: string;
+  name: string;
+  city: string;
+  state: string;
+  instagram: string | null;
+  facebook: string | null;
+  tiktok: string | null;
+  isActive: boolean;
 }
 
 export interface AdminUser {
@@ -84,6 +96,7 @@ export interface UploadRequest {
   uploaderName: string;
   uploaderEmail: string;
   uploaderPhone?: string;
+  studio: string;
   category: string;
   description?: string;
   sourceQrId?: string;

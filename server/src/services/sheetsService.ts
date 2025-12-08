@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import {
   Submission,
   Category,
+  Studio,
   AdminUser,
   AuditLogEntry,
   Config,
@@ -32,6 +33,7 @@ export class SheetsService {
         submission.fileId,
         submission.fileSizeMb,
         submission.uploadDevice,
+        submission.studio,
         submission.category,
         submission.description || '',
         submission.sourceQrId || '',
@@ -48,7 +50,7 @@ export class SheetsService {
 
       await sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: `${sheetName}!A:U`,
+        range: `${sheetName}!A:V`,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [row],
@@ -74,7 +76,7 @@ export class SheetsService {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `${sheetName}!A:U`,
+        range: `${sheetName}!A:V`,
       });
 
       const rows = response.data.values || [];
@@ -93,18 +95,19 @@ export class SheetsService {
         fileId: row[6] || '',
         fileSizeMb: parseFloat(row[7] || '0'),
         uploadDevice: (row[8] || 'Unknown') as any,
-        category: row[9] || '',
-        description: row[10] || null,
-        sourceQrId: row[11] || null,
-        waiverAgreed: row[12] === 'TRUE' || row[12] === true,
-        waiverTimestamp: row[13] || '',
-        aiTags: this.parseJsonArray(row[14]),
-        duplicateDetected: row[15] === 'TRUE' || row[15] === true,
-        adminStartDate: row[16] || null,
-        adminEndDate: row[17] || null,
-        status: (row[18] || 'New') as SubmissionStatus,
-        adminNotes: row[19] || null,
-        archiveFlag: row[20] === 'TRUE' || row[20] === true,
+        studio: row[9] || '',
+        category: row[10] || '',
+        description: row[11] || null,
+        sourceQrId: row[12] || null,
+        waiverAgreed: row[13] === 'TRUE' || row[13] === true,
+        waiverTimestamp: row[14] || '',
+        aiTags: this.parseJsonArray(row[15]),
+        duplicateDetected: row[16] === 'TRUE' || row[16] === true,
+        adminStartDate: row[17] || null,
+        adminEndDate: row[18] || null,
+        status: (row[19] || 'New') as SubmissionStatus,
+        adminNotes: row[20] || null,
+        archiveFlag: row[21] === 'TRUE' || row[21] === true,
       }));
 
       // Apply filters
@@ -151,7 +154,7 @@ export class SheetsService {
       // Find the row
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `${sheetName}!A:U`,
+        range: `${sheetName}!A:V`,
       });
 
       const rows = response.data.values || [];
@@ -172,18 +175,19 @@ export class SheetsService {
         fileId: currentRow[6] || '',
         fileSizeMb: parseFloat(currentRow[7] || '0'),
         uploadDevice: (currentRow[8] || 'Unknown') as any,
-        category: currentRow[9] || '',
-        description: currentRow[10] || null,
-        sourceQrId: currentRow[11] || null,
-        waiverAgreed: currentRow[12] === 'TRUE',
-        waiverTimestamp: currentRow[13] || '',
-        aiTags: this.parseJsonArray(currentRow[14]),
-        duplicateDetected: currentRow[15] === 'TRUE',
-        adminStartDate: currentRow[16] || null,
-        adminEndDate: currentRow[17] || null,
-        status: (currentRow[18] || 'New') as SubmissionStatus,
-        adminNotes: currentRow[19] || null,
-        archiveFlag: currentRow[20] === 'TRUE',
+        studio: currentRow[9] || '',
+        category: currentRow[10] || '',
+        description: currentRow[11] || null,
+        sourceQrId: currentRow[12] || null,
+        waiverAgreed: currentRow[13] === 'TRUE',
+        waiverTimestamp: currentRow[14] || '',
+        aiTags: this.parseJsonArray(currentRow[15]),
+        duplicateDetected: currentRow[16] === 'TRUE',
+        adminStartDate: currentRow[17] || null,
+        adminEndDate: currentRow[18] || null,
+        status: (currentRow[19] || 'New') as SubmissionStatus,
+        adminNotes: currentRow[20] || null,
+        archiveFlag: currentRow[21] === 'TRUE',
       };
 
       const updated = { ...current, ...updates };
@@ -198,6 +202,7 @@ export class SheetsService {
         updated.fileId,
         updated.fileSizeMb,
         updated.uploadDevice,
+        updated.studio,
         updated.category,
         updated.description || '',
         updated.sourceQrId || '',
@@ -214,7 +219,7 @@ export class SheetsService {
 
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${sheetName}!A${rowIndex + 1}:U${rowIndex + 1}`,
+        range: `${sheetName}!A${rowIndex + 1}:V${rowIndex + 1}`,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [updatedRow],
@@ -540,6 +545,124 @@ export class SheetsService {
     } catch (error) {
       logger.error('Failed to update config', error);
       throw new Error('Failed to update configuration');
+    }
+  }
+
+  // Studios Operations
+  async getStudios(): Promise<Studio[]> {
+    try {
+      const { sheets, spreadsheetId } = await this.getSheet('Studios');
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'Studios!A:H',
+      });
+
+      const rows = response.data.values || [];
+      if (rows.length <= 1) return [];
+
+      return rows.slice(1).map((row): Studio => ({
+        studioId: row[0] || '',
+        name: row[1] || '',
+        city: row[2] || '',
+        state: row[3] || '',
+        instagram: row[4] || null,
+        facebook: row[5] || null,
+        tiktok: row[6] || null,
+        isActive: row[7] === 'TRUE' || row[7] === true,
+      }));
+    } catch (error) {
+      logger.error('Failed to get studios', error);
+      throw new Error('Failed to retrieve studios');
+    }
+  }
+
+  async appendStudio(studio: Studio): Promise<void> {
+    try {
+      const { sheets, spreadsheetId } = await this.getSheet('Studios');
+
+      const row = [
+        studio.studioId,
+        studio.name,
+        studio.city,
+        studio.state,
+        studio.instagram || '',
+        studio.facebook || '',
+        studio.tiktok || '',
+        studio.isActive,
+      ];
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: 'Studios!A:H',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [row],
+        },
+      });
+
+      logger.info('Studio created', { studioId: studio.studioId });
+    } catch (error) {
+      logger.error('Failed to append studio', error);
+      throw new Error('Failed to create studio');
+    }
+  }
+
+  async updateStudio(studioId: string, updates: Partial<Studio>): Promise<Studio> {
+    try {
+      const { sheets, spreadsheetId } = await this.getSheet('Studios');
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'Studios!A:H',
+      });
+
+      const rows = response.data.values || [];
+      const rowIndex = rows.findIndex((row, idx) => idx > 0 && row[0] === studioId);
+
+      if (rowIndex === -1) {
+        throw new Error('Studio not found');
+      }
+
+      const currentRow = rows[rowIndex];
+      const current: Studio = {
+        studioId: currentRow[0],
+        name: currentRow[1],
+        city: currentRow[2],
+        state: currentRow[3],
+        instagram: currentRow[4] || null,
+        facebook: currentRow[5] || null,
+        tiktok: currentRow[6] || null,
+        isActive: currentRow[7] === 'TRUE',
+      };
+
+      const updated = { ...current, ...updates };
+
+      const updatedRow = [
+        updated.studioId,
+        updated.name,
+        updated.city,
+        updated.state,
+        updated.instagram || '',
+        updated.facebook || '',
+        updated.tiktok || '',
+        updated.isActive,
+      ];
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `Studios!A${rowIndex + 1}:H${rowIndex + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [updatedRow],
+        },
+      });
+
+      logger.info('Studio updated', { studioId });
+      return updated;
+    } catch (error) {
+      logger.error('Failed to update studio', error);
+      throw new Error('Failed to update studio');
     }
   }
 

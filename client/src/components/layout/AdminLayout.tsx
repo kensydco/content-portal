@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FolderTree, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, FolderTree, Building, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import Button from '../ui/Button';
 
@@ -22,7 +22,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/admin/categories', label: 'Categories', icon: FolderTree },
     ...(user?.role === 'SuperAdmin'
-      ? [{ path: '/admin/config', label: 'Configuration', icon: Settings }]
+      ? [
+          { path: '/admin/studios', label: 'Studios', icon: Building },
+          { path: '/admin/config', label: 'Configuration', icon: Settings },
+        ]
       : []),
   ];
 

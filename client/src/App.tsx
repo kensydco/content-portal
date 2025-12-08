@@ -7,6 +7,7 @@ import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminConfigPage from './pages/AdminConfigPage';
 import AdminCategoriesPage from './pages/AdminCategoriesPage';
+import AdminStudiosPage from './pages/AdminStudiosPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+            <Route path="/admin/studios" element={<AdminStudiosPage />} />
             <Route path="/admin/config" element={<AdminConfigPage />} />
 
             {/* Catch all */}
