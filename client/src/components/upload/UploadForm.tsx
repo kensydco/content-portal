@@ -15,6 +15,7 @@ interface UploadFormData {
   uploaderName: string;
   uploaderEmail: string;
   uploaderPhone?: string;
+  studio: string;
   category: string;
   description?: string;
   waiverAgreed: boolean;
@@ -26,6 +27,7 @@ export default function UploadForm() {
   const { uploadFile, uploading, progress } = useUpload();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [studios, setStudios] = useState<Array<{ id: string; name: string }>>([]);
   const [config, setConfig] = useState({ waiverUrl: '', maxFileSizeMb: 500, allowedFileTypes: [] as string[] });
 
   const {
@@ -52,9 +54,22 @@ export default function UploadForm() {
         { id: '3', name: 'Testimonial', description: null, isActive: true, createdAt: '' },
       ]);
     });
+
+    // Load studios
+    api.get('/api/studios/public').then((res) => {
+      if (res.data.success) {
+        setStudios(res.data.data.studios);
+      }
+    }).catch(() => {
+      // Fallback if endpoint doesn't exist yet
+      setStudios([
+        { id: 'TN0045', name: 'Collierville' },
+        { id: 'NY0017', name: 'Ithaca' },
+      ]);
+    });
   }, []);
 
-  const onSubmit = async (data: UploadFormData) => {
+  const onSubmit = async (data: UploadFormData) {
     if (!selectedFile) {
       return;
     }
@@ -68,6 +83,7 @@ export default function UploadForm() {
     formData.append('uploaderName', data.uploaderName);
     formData.append('uploaderEmail', data.uploaderEmail);
     if (data.uploaderPhone) formData.append('uploaderPhone', data.uploaderPhone);
+    formData.append('studio', data.studio);
     formData.append('category', data.category);
     if (data.description) formData.append('description', data.description);
     formData.append('waiverAgreed', 'true');
@@ -127,6 +143,14 @@ export default function UploadForm() {
       />
 
       <Select
+        label="Studio Location"
+        {...register('studio', { required: 'Studio is required' })}
+        options={studios.map((s) => ({ value: s.id, label: `${s.name} (${s.id})` }))}
+        error={errors.studio?.message}
+        disabled={uploading}
+      />
+
+      <Select
         label="Category"
         {...register('category', { required: 'Category is required' })}
         options={categories.map((c) => ({ value: c.name, label: c.name }))}
@@ -151,7 +175,9 @@ export default function UploadForm() {
 
       <WaiverCheckbox
         waiverUrl={config.waiverUrl}
-        {...register('waiverAgreed', { required: 'You must agree to the waiver' })}
+        {...register('waiverAgreed', {
+          validate: (value) => value === true || 'You must agree to the waiver'
+        })}
         error={errors.waiverAgreed?.message}
       />
 

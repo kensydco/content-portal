@@ -18,7 +18,12 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-source .env
+# Load specific variables from .env
+GOOGLE_PROJECT_ID=$(grep GOOGLE_PROJECT_ID .env | cut -d '=' -f2)
+GOOGLE_CLIENT_EMAIL=$(grep GOOGLE_CLIENT_EMAIL .env | cut -d '=' -f2)
+SPREADSHEET_ID=$(grep SPREADSHEET_ID .env | cut -d '=' -f2)
+DRIVE_FOLDER_ID=$(grep DRIVE_FOLDER_ID .env | cut -d '=' -f2)
+WAIVER_URL=$(grep WAIVER_URL .env | cut -d '=' -f2)
 
 echo "Project: $PROJECT_ID"
 echo "Region: $REGION"
