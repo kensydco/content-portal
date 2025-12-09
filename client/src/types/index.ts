@@ -98,6 +98,20 @@ export interface LoginResponse {
   user: AdminUser;
 }
 
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetResponse {
+  resetToken: string;
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  resetToken: string;
+  newPassword: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   pagination: {

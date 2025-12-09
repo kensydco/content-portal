@@ -17,6 +17,15 @@ export const loginSchema = z.object({
   password: z.string().min(8),
 });
 
+export const passwordResetRequestSchema = z.object({
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z.object({
+  resetToken: z.string().min(1),
+  newPassword: z.string().min(8).max(100),
+});
+
 export const updateSubmissionSchema = z.object({
   status: z.enum(['New', 'Approved', 'Rejected']).optional(),
   adminStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

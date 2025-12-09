@@ -4,6 +4,8 @@ import { ToastProvider } from './context/ToastContext';
 import UploadPage from './pages/UploadPage';
 import UploadSuccessPage from './pages/UploadSuccessPage';
 import AdminLoginPage from './pages/AdminLoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminConfigPage from './pages/AdminConfigPage';
 import AdminCategoriesPage from './pages/AdminCategoriesPage';
@@ -21,6 +23,8 @@ function App() {
 
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/admin/reset-password" element={<ResetPasswordPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/categories" element={<AdminCategoriesPage />} />
             <Route path="/admin/studios" element={<AdminStudiosPage />} />

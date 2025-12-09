@@ -421,6 +421,140 @@ export class SheetsService {
     }
   }
 
+  async setPasswordResetToken(email: string, resetToken: string, expiresAt: string): Promise<void> {
+    try {
+      const { sheets, spreadsheetId, sheetName } = await this.getSheet(env.ADMINS_SHEET_NAME);
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A:I`,
+      });
+
+      const rows = response.data.values || [];
+      const rowIndex = rows.findIndex((row, idx) => idx > 0 && row[1] === email);
+
+      if (rowIndex === -1) {
+        throw new Error('Admin not found');
+      }
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!H${rowIndex + 1}:I${rowIndex + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[resetToken, expiresAt]],
+        },
+      });
+
+      logger.info('Password reset token set', { email });
+    } catch (error) {
+      logger.error('Failed to set password reset token', error);
+      throw new Error('Failed to set password reset token');
+    }
+  }
+
+  async getAdminByResetToken(resetToken: string): Promise<AdminUser | null> {
+    try {
+      const { sheets, spreadsheetId, sheetName } = await this.getSheet(env.ADMINS_SHEET_NAME);
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A:I`,
+      });
+
+      const rows = response.data.values || [];
+      if (rows.length <= 1) return null;
+
+      const adminRow = rows.slice(1).find((row) => {
+        const token = row[7]; // Column H (Reset_Token)
+        const expiry = row[8]; // Column I (Token_Expiry)
+
+        if (!token || token !== resetToken) return false;
+        if (!expiry) return false;
+
+        // Check if token is expired
+        const expiryDate = new Date(expiry);
+        const now = new Date();
+        return expiryDate > now;
+      });
+
+      if (!adminRow) return null;
+
+      return {
+        id: adminRow[0],
+        email: adminRow[1],
+        role: adminRow[3] as AdminRole,
+        isActive: adminRow[4] === 'TRUE' || adminRow[4] === true,
+        createdAt: adminRow[5] || '',
+        lastLogin: adminRow[6] || null,
+      };
+    } catch (error) {
+      logger.error('Failed to get admin by reset token', error);
+      return null;
+    }
+  }
+
+  async clearPasswordResetToken(email: string): Promise<void> {
+    try {
+      const { sheets, spreadsheetId, sheetName } = await this.getSheet(env.ADMINS_SHEET_NAME);
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A:I`,
+      });
+
+      const rows = response.data.values || [];
+      const rowIndex = rows.findIndex((row, idx) => idx > 0 && row[1] === email);
+
+      if (rowIndex === -1) return;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!H${rowIndex + 1}:I${rowIndex + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [['', '']],
+        },
+      });
+
+      logger.info('Password reset token cleared', { email });
+    } catch (error) {
+      logger.error('Failed to clear password reset token', error);
+    }
+  }
+
+  async updateAdminPassword(email: string, newPasswordHash: string): Promise<void> {
+    try {
+      const { sheets, spreadsheetId, sheetName } = await this.getSheet(env.ADMINS_SHEET_NAME);
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A:I`,
+      });
+
+      const rows = response.data.values || [];
+      const rowIndex = rows.findIndex((row, idx) => idx > 0 && row[1] === email);
+
+      if (rowIndex === -1) {
+        throw new Error('Admin not found');
+      }
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!C${rowIndex + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[newPasswordHash]],
+        },
+      });
+
+      logger.info('Admin password updated', { email });
+    } catch (error) {
+      logger.error('Failed to update admin password', error);
+      throw new Error('Failed to update admin password');
+    }
+  }
+
   // Audit Log Operations
   async appendAuditLog(entry: AuditLogEntry): Promise<void> {
     try {

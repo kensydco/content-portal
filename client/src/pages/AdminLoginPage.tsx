@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -85,6 +85,15 @@ export default function AdminLoginPage() {
               Sign In
             </Button>
           </form>
+
+          <div className="mt-4 text-center">
+            <Link
+              to="/admin/forgot-password"
+              className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
       </div>
     </div>
