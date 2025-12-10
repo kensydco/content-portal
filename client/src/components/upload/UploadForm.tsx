@@ -69,7 +69,7 @@ export default function UploadForm() {
     });
   }, []);
 
-  const onSubmit = async (data: UploadFormData) {
+  const onSubmit = async (data: UploadFormData) => {
     if (!selectedFile) {
       return;
     }
@@ -145,7 +145,7 @@ export default function UploadForm() {
       <Select
         label="Studio Location"
         {...register('studio', { required: 'Studio is required' })}
-        options={studios.map((s) => ({ value: s.id, label: `${s.name} (${s.id})` }))}
+        options={studios.map((s) => ({ value: s.id, label: s.name + ' - ' + s.id }))}
         error={errors.studio?.message}
         disabled={uploading}
       />

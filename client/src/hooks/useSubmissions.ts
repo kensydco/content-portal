@@ -20,8 +20,6 @@ export function useSubmissions() {
     totalPages: 0,
   });
   const [filters, setFilters] = useState<SubmissionFilters>({
-    page: 1,
-    limit: 20,
     sortBy: 'timestamp',
     sortOrder: 'desc',
   });
@@ -32,6 +30,11 @@ export function useSubmissions() {
       setLoading(true);
       const params = new URLSearchParams();
 
+      // Add pagination params
+      params.append('page', String(pagination.page));
+      params.append('limit', String(pagination.limit));
+
+      // Add filter params
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           params.append(key, String(value));
@@ -50,18 +53,19 @@ export function useSubmissions() {
     } finally {
       setLoading(false);
     }
-  }, [filters, showError]);
+  }, [filters, pagination.page, pagination.limit, showError]);
 
   useEffect(() => {
     fetchSubmissions();
   }, [fetchSubmissions]);
 
   const updateFilters = useCallback((newFilters: Partial<SubmissionFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
   const changePage = useCallback((page: number) => {
-    setFilters((prev) => ({ ...prev, page }));
+    setPagination((prev) => ({ ...prev, page }));
   }, []);
 
   const refresh = useCallback(() => {

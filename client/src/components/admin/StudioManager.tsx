@@ -131,7 +131,7 @@ export default function StudioManager() {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-semibold text-neutral-900">{studio.name}</h3>
-                  <Badge variant={studio.isActive ? 'success' : 'default'}>
+                  <Badge variant={studio.isActive ? 'Approved' : 'default'}>
                     {studio.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </div>
