@@ -1,0 +1,40 @@
+# gcloudignore for Cloud Build
+# This ensures the correct files are uploaded to Cloud Build
+
+# Don't upload node_modules (will be installed in Docker)
+node_modules/
+**/node_modules/
+
+# Don't upload build artifacts (will be generated in Docker)
+**/dist/
+**/build/
+
+# Don't upload git directory
+.git/
+.gitignore
+
+# Don't upload environment files
+.env
+.env.*
+!.env.example
+
+# Don't upload editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Don't upload logs
+*.log
+
+# Don't upload OS files
+.DS_Store
+Thumbs.db
+
+# Don't upload documentation (except README)
+*.md
+!README.md
+
+# IMPORTANT: Make sure to upload all source files
+# Everything in client/src/ should be uploaded
+# Everything in server/src/ should be uploaded
