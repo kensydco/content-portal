@@ -3,6 +3,9 @@ FROM node:20-alpine AS client-builder
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
+# Cache bust to ensure fresh source is copied
+ARG CACHE_BUST=unknown
+RUN echo "Cache bust: $CACHE_BUST"
 COPY client/ ./
 RUN npm run build
 

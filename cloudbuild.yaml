@@ -4,6 +4,8 @@ steps:
     args:
       - 'build'
       - '--no-cache'
+      - '--build-arg'
+      - 'CACHE_BUST=$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/content-portal:$COMMIT_SHA'
       - '-t'
