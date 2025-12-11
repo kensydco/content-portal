@@ -1,0 +1,30 @@
+steps:
+  # Build the container image with no cache
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--no-cache'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/content-portal:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/content-portal:latest'
+      - '.'
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/content-portal:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/content-portal:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/content-portal:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/content-portal:latest'
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY

@@ -30,10 +30,28 @@ echo "Region: $REGION"
 echo "Service: $SERVICE_NAME"
 echo ""
 
+# Build the container image using Cloud Build
+echo "Building container image (this will take a few minutes)..."
+COMMIT_SHA=$(git rev-parse --short HEAD)
+gcloud builds submit \
+  --config cloudbuild.yaml \
+  --substitutions=COMMIT_SHA=$COMMIT_SHA \
+  --project=$PROJECT_ID
+
+if [ $? -ne 0 ]; then
+    echo "Error: Build failed"
+    exit 1
+fi
+
+IMAGE_URL="gcr.io/$PROJECT_ID/$SERVICE_NAME:$COMMIT_SHA"
+echo ""
+echo "✓ Build complete: $IMAGE_URL"
+echo ""
+
 # Deploy to Cloud Run
-echo "Starting deployment..."
+echo "Deploying to Cloud Run..."
 gcloud run deploy $SERVICE_NAME \
-  --source . \
+  --image $IMAGE_URL \
   --region $REGION \
   --allow-unauthenticated \
   --memory 1Gi \
