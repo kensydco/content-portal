@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getSheetsClient } from '../utils/googleAuth';
-import { getDriveClient } from '../utils/googleDrive';
+import { getSheetsClient, getDriveClient } from '../utils/googleAuth';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 
