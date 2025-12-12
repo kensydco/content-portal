@@ -52,10 +52,10 @@ export class AuthService {
   }
 
   generateToken(payload: TokenPayload): string {
-    const options: jwt.SignOptions = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return jwt.sign(payload, env.JWT_SECRET, {
       expiresIn: env.JWT_EXPIRES_IN,
-    };
-    return jwt.sign(payload, env.JWT_SECRET, options);
+    } as any);
   }
 
   verifyToken(token: string): TokenPayload | null {
