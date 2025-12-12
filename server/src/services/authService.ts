@@ -52,9 +52,10 @@ export class AuthService {
   }
 
   generateToken(payload: TokenPayload): string {
-    return jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN as string,
-    });
+    const options: jwt.SignOptions = {
+      expiresIn: env.JWT_EXPIRES_IN,
+    };
+    return jwt.sign(payload, env.JWT_SECRET, options);
   }
 
   verifyToken(token: string): TokenPayload | null {
