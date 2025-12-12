@@ -45,7 +45,8 @@ export function authenticateApiKey(
 
     if (!apiKey) {
       // Try Bearer token as fallback
-      return authenticate(req, res, next);
+      authenticate(req, res, next);
+      return;
     }
 
     // For automation endpoint, check API key
