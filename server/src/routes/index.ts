@@ -5,6 +5,7 @@ import adminRoutes from './adminRoutes';
 import configRoutes from './configRoutes';
 import automationRoutes from './automationRoutes';
 import studiosRoutes from './studiosRoutes';
+import healthRoutes from './healthRoutes';
 
 const router = Router();
 
@@ -14,16 +15,6 @@ router.use('/admin', adminRoutes);
 router.use('/config', configRoutes);
 router.use('/automation', automationRoutes);
 router.use('/studios', studiosRoutes);
-
-// Health check endpoint
-router.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-    },
-  });
-});
+router.use('/', healthRoutes);
 
 export default router;
