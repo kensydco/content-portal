@@ -20,19 +20,23 @@ export async function requestPasswordReset(
   try {
     const { email } = req.body;
 
+    logger.info('Password reset requested', { email });
+
     // Check if admin exists
     const admin = await sheetsService.getAdminByEmail(email);
 
     if (!admin) {
+      logger.warn('Password reset requested for non-existent admin', { email });
       // Don't reveal if email exists or not (security best practice)
       res.status(200).json({
         success: true,
-        message: 'If an account with that email exists, a reset token has been generated.',
+        message: 'If an account with that email exists, a reset code has been generated.',
       });
       return;
     }
 
     if (!admin.isActive) {
+      logger.warn('Password reset requested for inactive admin', { email });
       throw new AppError(403, 'ACCOUNT_INACTIVE', 'This account is inactive');
     }
 
@@ -40,10 +44,12 @@ export async function requestPasswordReset(
     const resetToken = generateResetToken();
     const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MS).toISOString();
 
+    logger.info('Storing reset token', { email, expiresAt });
+
     // Store token in database
     await sheetsService.setPasswordResetToken(email, resetToken, expiresAt);
 
-    logger.info('Password reset token generated', { email });
+    logger.info('Password reset code generated successfully', { email });
 
     // In production, you would send this via email
     // For now, return it in the response
@@ -51,11 +57,12 @@ export async function requestPasswordReset(
       success: true,
       data: {
         resetToken,
-        message: 'Reset token generated. In production, this would be emailed to you.',
+        message: 'Reset code generated. In production, this would be emailed to you.',
         expiresIn: '1 hour',
       },
     });
   } catch (error) {
+    logger.error('Password reset error', error);
     next(error);
   }
 }

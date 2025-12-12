@@ -1,12 +1,12 @@
-import { forwardRef } from 'react';
+import { forwardRef, InputHTMLAttributes } from 'react';
 
-interface WaiverCheckboxProps {
+interface WaiverCheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   waiverUrl: string;
   error?: string;
 }
 
 const WaiverCheckbox = forwardRef<HTMLInputElement, WaiverCheckboxProps>(
-  ({ waiverUrl, error }, ref) => {
+  ({ waiverUrl, error, ...props }, ref) => {
     return (
       <div className="space-y-2">
         <label className="flex items-start gap-3 cursor-pointer">
@@ -14,6 +14,7 @@ const WaiverCheckbox = forwardRef<HTMLInputElement, WaiverCheckboxProps>(
             ref={ref}
             type="checkbox"
             className="mt-1 w-4 h-4 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
+            {...props}
           />
           <span className="text-sm text-neutral-700">
             I agree to the{' '}
