@@ -12,6 +12,9 @@ RUN npm run build
 # Stage 2: Build server
 FROM node:20-alpine AS server-builder
 WORKDIR /app/server
+# Cache bust to ensure fresh source is copied
+ARG CACHE_BUST=unknown
+RUN echo "Cache bust: $CACHE_BUST"
 COPY server/package*.json ./
 RUN npm ci
 COPY server/ ./
@@ -20,6 +23,10 @@ RUN npm run build
 # Stage 3: Production image
 FROM node:20-alpine AS production
 WORKDIR /app
+
+# Cache bust to ensure fresh source is copied
+ARG CACHE_BUST=unknown
+RUN echo "Cache bust: $CACHE_BUST"
 
 # Copy server build and dependencies
 COPY server/package*.json ./
