@@ -80,20 +80,20 @@ export default function ResetPasswordPage() {
           </div>
           <h1 className="text-2xl font-bold text-neutral-900 mb-2">Reset Password</h1>
           <p className="text-neutral-600 text-sm">
-            Enter your reset token and new password
+            Enter your reset code and new password
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
-            label="Reset Token"
+            label="Reset Code"
             type="text"
-            placeholder="Paste your reset token here"
+            placeholder="Paste your reset code here"
             error={errors.resetToken?.message}
             {...register('resetToken', {
-              required: 'Reset token is required',
+              required: 'Reset code is required',
             })}
-            helperText="Copy the token from the previous page or from your email"
+            helperText="Copy the code from the previous page or from your email"
           />
 
           <Input

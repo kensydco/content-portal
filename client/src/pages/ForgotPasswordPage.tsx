@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
 
       if (response.data.success) {
         setResetToken(response.data.data.resetToken);
-        showSuccess('Reset token generated successfully');
+        showSuccess('Reset code generated successfully');
       }
     } catch (error: any) {
       showError(error.response?.data?.error?.message || 'Failed to request password reset');
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
     if (resetToken) {
       navigator.clipboard.writeText(resetToken);
       setCopied(true);
-      showSuccess('Token copied to clipboard');
+      showSuccess('Reset code copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -56,15 +56,15 @@ export default function ForgotPasswordPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-success rounded-full mb-4">
               <Check className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Reset Token Generated</h1>
+            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Password Reset Code</h1>
             <p className="text-neutral-600 text-sm">
-              Copy the token below and use it to reset your password
+              Copy the code below and use it to reset your password
             </p>
           </div>
 
           <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 mb-6">
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Reset Token
+              Reset Code
             </label>
             <div className="flex gap-2">
               <input
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
               </Button>
             </div>
             <p className="text-xs text-neutral-500 mt-2">
-              Token expires in 1 hour
+              Code expires in 1 hour
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
 
           <div className="mt-6 p-4 bg-primary-50 rounded-lg">
             <p className="text-xs text-neutral-600">
-              <strong>Note:</strong> In production, this token would be emailed to you. For now, copy it and use it on the next page to reset your password.
+              <strong>Note:</strong> In production, this code would be emailed to you. For now, copy it and use it on the next page to reset your password.
             </p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
           </div>
           <h1 className="text-2xl font-bold text-neutral-900 mb-2">Forgot Password?</h1>
           <p className="text-neutral-600 text-sm">
-            Enter your email address and we'll generate a reset token
+            Enter your email address to reset your password
           </p>
         </div>
 
@@ -139,7 +139,7 @@ export default function ForgotPasswordPage() {
           />
 
           <Button type="submit" fullWidth isLoading={loading}>
-            Request Reset Token
+            Send Reset Instructions
           </Button>
         </form>
 
