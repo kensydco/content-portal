@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { getSheetsClient, getDriveClient } from '../utils/googleAuth';
+import { Storage } from '@google-cloud/storage';
+import { getSheetsClient } from '../utils/googleAuth';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 
@@ -48,37 +49,44 @@ router.get('/health', async (req: Request, res: Response) => {
       }
     }
 
-    // Test Google Drive connection
-    logger.info('Testing Google Drive connection...');
-    const drive = await getDriveClient();
-    const folderId = env.DRIVE_FOLDER_ID;
+    // Test Cloud Storage connection
+    logger.info('Testing Cloud Storage connection...');
+    const bucketName = 'content-portal-uploads';
 
-    if (!folderId) {
-      checks.googleDrive = {
-        status: 'error',
-        error: 'DRIVE_FOLDER_ID not configured',
-      };
-    } else {
-      try {
-        const response = await drive.files.get({
-          fileId: folderId,
-          fields: 'id, name, mimeType, permissions',
-        });
+    try {
+      const storage = new Storage({
+        projectId: env.GOOGLE_PROJECT_ID,
+        credentials: {
+          client_email: env.GOOGLE_CLIENT_EMAIL,
+          private_key: env.GOOGLE_PRIVATE_KEY,
+        },
+      });
 
-        checks.googleDrive = {
+      const bucket = storage.bucket(bucketName);
+      const [exists] = await bucket.exists();
+
+      if (exists) {
+        const [metadata] = await bucket.getMetadata();
+        checks.cloudStorage = {
           status: 'ok',
-          folderId,
-          folderName: response.data.name,
-          mimeType: response.data.mimeType,
+          bucketName,
+          location: metadata.location,
+          storageClass: metadata.storageClass,
         };
-      } catch (error: any) {
-        checks.googleDrive = {
+      } else {
+        checks.cloudStorage = {
           status: 'error',
-          folderId,
-          error: error.message,
-          code: error.code,
+          bucketName,
+          error: 'Bucket does not exist',
         };
       }
+    } catch (error: any) {
+      checks.cloudStorage = {
+        status: 'error',
+        bucketName,
+        error: error.message,
+        code: error.code,
+      };
     }
 
     // Test environment variables
@@ -87,12 +95,11 @@ router.get('/health', async (req: Request, res: Response) => {
       GOOGLE_CLIENT_EMAIL: env.GOOGLE_CLIENT_EMAIL ? 'set' : 'missing',
       GOOGLE_PRIVATE_KEY: env.GOOGLE_PRIVATE_KEY ? 'set (length: ' + env.GOOGLE_PRIVATE_KEY.length + ')' : 'missing',
       SPREADSHEET_ID: env.SPREADSHEET_ID ? 'set' : 'missing',
-      DRIVE_FOLDER_ID: env.DRIVE_FOLDER_ID ? 'set' : 'missing',
       JWT_SECRET: env.JWT_SECRET ? 'set' : 'missing',
     };
 
     // Overall status
-    const hasErrors = checks.googleSheets?.status === 'error' || checks.googleDrive?.status === 'error';
+    const hasErrors = checks.googleSheets?.status === 'error' || checks.cloudStorage?.status === 'error';
     checks.status = hasErrors ? 'degraded' : 'healthy';
 
     res.status(hasErrors ? 503 : 200).json(checks);
