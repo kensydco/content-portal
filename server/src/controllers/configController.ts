@@ -11,10 +11,14 @@ export async function getPublicConfig(
   try {
     const config = await sheetsService.getConfig();
 
+    // Ensure all essential file types are included
+    const essentialTypes = ['.jpg', '.jpeg', '.png', '.heic', '.mp4', '.mov'];
+    const allTypes = [...new Set([...config.allowedFileTypes, ...essentialTypes])];
+
     const publicConfig: PublicConfig = {
       waiverUrl: config.waiverUrl,
       maxFileSizeMb: config.maxFileSizeMb,
-      allowedFileTypes: config.allowedFileTypes,
+      allowedFileTypes: allTypes,
     };
 
     res.status(200).json({
