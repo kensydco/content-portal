@@ -30,26 +30,33 @@ export async function uploadContent(
   next: NextFunction
 ): Promise<void> {
   try {
-    const file = req.file;
+    const files = req.files as Express.Multer.File[];
 
-    if (!file) {
-      throw new AppError(400, 'VALIDATION_ERROR', 'No file uploaded');
+    if (!files || files.length === 0) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'No files uploaded');
     }
 
-    // Validate file type
-    const fileExt = '.' + file.originalname.split('.').pop()?.toLowerCase();
-    if (!ALLOWED_EXTENSIONS.includes(fileExt) && !ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      throw new AppError(
-        400,
-        'INVALID_FILE_TYPE',
-        `File type not allowed. Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`
-      );
+    if (files.length > 5) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'Maximum 5 files allowed per upload');
     }
 
-    // Validate file size (500MB = 524288000 bytes)
-    const maxSize = 500 * 1024 * 1024;
-    if (file.size > maxSize) {
-      throw new AppError(400, 'FILE_TOO_LARGE', 'File size exceeds 500MB limit');
+    // Calculate total file size
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    const maxTotalSize = 500 * 1024 * 1024;
+    if (totalSize > maxTotalSize) {
+      throw new AppError(400, 'FILE_TOO_LARGE', 'Total file size exceeds 500MB limit');
+    }
+
+    // Validate each file type and individual size
+    for (const file of files) {
+      const fileExt = '.' + file.originalname.split('.').pop()?.toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(fileExt) && !ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        throw new AppError(
+          400,
+          'INVALID_FILE_TYPE',
+          `File type not allowed for ${file.originalname}. Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`
+        );
+      }
     }
 
     const {
@@ -59,6 +66,8 @@ export async function uploadContent(
       studio,
       category,
       description,
+      adminStartDate,
+      adminEndDate,
       sourceQrId,
       waiverAgreed,
       waiverTimestamp,
@@ -78,58 +87,68 @@ export async function uploadContent(
       throw new AppError(400, 'VALIDATION_ERROR', 'Invalid category selected');
     }
 
-    const submissionId = uuidv4();
-    const fileName = `${submissionId}_${file.originalname}`;
-
-    // Upload to Drive
-    logger.info('Uploading file to Drive', { submissionId, fileName });
-    const driveResult = await driveService.uploadFile(file.buffer, fileName, file.mimetype);
-
-    // Get thumbnail if available
-    const thumbnailUrl = await driveService.getFileThumbnail(driveResult.fileId);
-
     // Detect device
     const uploadDevice = detectDevice(req.headers['user-agent'] || '');
 
-    // Create submission record
-    const submission: Submission = {
-      submissionId,
-      timestamp: new Date().toISOString(),
-      uploaderName,
-      uploaderEmail,
-      uploaderPhone: uploaderPhone || null,
-      fileDriveUrl: driveResult.webViewLink,
-      fileId: driveResult.fileId,
-      fileSizeMb: parseFloat((driveResult.size / (1024 * 1024)).toFixed(2)),
-      uploadDevice,
-      studio,
-      category,
-      description: description || null,
-      sourceQrId: sourceQrId || null,
-      waiverAgreed: true,
-      waiverTimestamp,
-      aiTags: [], // Can be populated by future AI processing
-      duplicateDetected: false, // Can be implemented with hash checking
-      adminStartDate: null,
-      adminEndDate: null,
-      status: 'New',
-      adminNotes: null,
-      archiveFlag: false,
-      thumbnailUrl: thumbnailUrl || undefined,
-    };
+    // Process each file
+    const uploadResults = [];
 
-    // Save to Sheets
-    logger.info('Saving submission to Sheets', { submissionId });
-    await sheetsService.appendSubmission(submission);
+    for (const file of files) {
+      const submissionId = uuidv4();
+      const fileName = `${submissionId}_${file.originalname}`;
 
-    logger.info('Upload completed successfully', { submissionId });
+      // Upload to Cloud Storage
+      logger.info('Uploading file to Cloud Storage', { submissionId, fileName });
+      const driveResult = await driveService.uploadFile(file.buffer, fileName, file.mimetype);
+
+      // Get thumbnail if available
+      const thumbnailUrl = await driveService.getFileThumbnail(driveResult.fileId);
+
+      // Create submission record
+      const submission: Submission = {
+        submissionId,
+        timestamp: new Date().toISOString(),
+        uploaderName,
+        uploaderEmail,
+        uploaderPhone: uploaderPhone || null,
+        fileDriveUrl: driveResult.webViewLink,
+        fileId: driveResult.fileId,
+        fileSizeMb: parseFloat((driveResult.size / (1024 * 1024)).toFixed(2)),
+        uploadDevice,
+        studio,
+        category,
+        description: description || null,
+        sourceQrId: sourceQrId || null,
+        waiverAgreed: true,
+        waiverTimestamp,
+        aiTags: [], // Can be populated by future AI processing
+        duplicateDetected: false, // Can be implemented with hash checking
+        adminStartDate: adminStartDate || null,
+        adminEndDate: adminEndDate || null,
+        status: 'New',
+        adminNotes: null,
+        archiveFlag: false,
+        thumbnailUrl: thumbnailUrl || undefined,
+      };
+
+      // Save to Sheets
+      logger.info('Saving submission to Sheets', { submissionId });
+      await sheetsService.appendSubmission(submission);
+
+      uploadResults.push({
+        submissionId,
+        fileUrl: driveResult.webViewLink,
+        fileName: file.originalname,
+      });
+    }
+
+    logger.info('All uploads completed successfully', { count: uploadResults.length });
 
     res.status(201).json({
       success: true,
       data: {
-        submissionId,
-        fileUrl: driveResult.webViewLink,
-        message: 'Upload successful',
+        uploads: uploadResults,
+        message: `${uploadResults.length} file(s) uploaded successfully`,
       },
     });
   } catch (error) {

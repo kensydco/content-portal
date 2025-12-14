@@ -18,7 +18,7 @@ const upload = multer({
 router.post(
   '/',
   uploadRateLimiter,
-  upload.single('file'),
+  upload.array('files', 5), // Accept up to 5 files
   validateBody(uploadSchema),
   uploadContent
 );

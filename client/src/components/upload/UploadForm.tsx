@@ -18,6 +18,8 @@ interface UploadFormData {
   studio: string;
   category: string;
   description?: string;
+  adminStartDate: string;
+  adminEndDate: string;
   waiverAgreed: boolean;
 }
 
@@ -25,16 +27,25 @@ export default function UploadForm() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { uploadFile, uploading, progress } = useUpload();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [studios, setStudios] = useState<Array<{ id: string; name: string }>>([]);
   const [config, setConfig] = useState({ waiverUrl: '', maxFileSizeMb: 500, allowedFileTypes: [] as string[] });
+
+  // Calculate default dates: today and 90 days from today
+  const today = new Date().toISOString().split('T')[0];
+  const ninetyDaysFromNow = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<UploadFormData>();
+  } = useForm<UploadFormData>({
+    defaultValues: {
+      adminStartDate: today,
+      adminEndDate: ninetyDaysFromNow,
+    },
+  });
 
   useEffect(() => {
     // Load public config
@@ -70,7 +81,7 @@ export default function UploadForm() {
   }, []);
 
   const onSubmit = async (data: UploadFormData) => {
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
       return;
     }
 
@@ -79,13 +90,20 @@ export default function UploadForm() {
     }
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
+
+    // Append all files
+    selectedFiles.forEach((file) => {
+      formData.append('files', file);
+    });
+
     formData.append('uploaderName', data.uploaderName);
     formData.append('uploaderEmail', data.uploaderEmail);
     if (data.uploaderPhone) formData.append('uploaderPhone', data.uploaderPhone);
     formData.append('studio', data.studio);
     formData.append('category', data.category);
     if (data.description) formData.append('description', data.description);
+    formData.append('adminStartDate', data.adminStartDate);
+    formData.append('adminEndDate', data.adminEndDate);
     formData.append('waiverAgreed', 'true');
     formData.append('waiverTimestamp', new Date().toISOString());
 
@@ -103,9 +121,11 @@ export default function UploadForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <FileDropzone
-        selectedFile={selectedFile}
-        onFileSelect={setSelectedFile}
-        onFileRemove={() => setSelectedFile(null)}
+        selectedFiles={selectedFiles}
+        onFileSelect={setSelectedFiles}
+        onFileRemove={(index) => {
+          setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+        }}
         allowedTypes={config.allowedFileTypes}
         maxSizeMb={config.maxFileSizeMb}
       />
@@ -173,6 +193,25 @@ export default function UploadForm() {
         <p className="mt-1 text-xs text-neutral-500">Max 280 characters</p>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="Start Date"
+          type="date"
+          {...register('adminStartDate', { required: 'Start date is required' })}
+          error={errors.adminStartDate?.message}
+          disabled={uploading}
+          helperText="When content can start being used"
+        />
+        <Input
+          label="End Date"
+          type="date"
+          {...register('adminEndDate', { required: 'End date is required' })}
+          error={errors.adminEndDate?.message}
+          disabled={uploading}
+          helperText="When content should stop being used"
+        />
+      </div>
+
       <WaiverCheckbox
         waiverUrl={config.waiverUrl}
         {...register('waiverAgreed', {
@@ -185,10 +224,10 @@ export default function UploadForm() {
         type="submit"
         fullWidth
         size="lg"
-        disabled={!selectedFile || uploading}
+        disabled={selectedFiles.length === 0 || uploading}
         isLoading={uploading}
       >
-        Upload Content
+        Upload {selectedFiles.length > 0 ? `${selectedFiles.length} File${selectedFiles.length > 1 ? 's' : ''}` : 'Content'}
       </Button>
     </form>
   );
