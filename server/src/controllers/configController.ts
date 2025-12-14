@@ -30,6 +30,49 @@ export async function getPublicConfig(
   }
 }
 
+export async function getPublicCategories(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const categories = await sheetsService.getCategories();
+    const activeCategories = categories.filter((c) => c.isActive);
+
+    res.status(200).json({
+      success: true,
+      data: { categories: activeCategories },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPublicStudios(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const studios = await sheetsService.getStudios();
+    const activeStudios = studios
+      .filter((s) => s.isActive)
+      .map((s) => ({
+        id: s.studioId,
+        name: s.name,
+        city: s.city,
+        state: s.state,
+      }));
+
+    res.status(200).json({
+      success: true,
+      data: { studios: activeStudios },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getFullConfig(
   req: Request,
   res: Response,

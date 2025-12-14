@@ -16,7 +16,10 @@ export default function SubmissionCard({
   isSelected,
   onSelect,
 }: SubmissionCardProps) {
-  const isVideo = submission.fileDriveUrl.includes('video') || submission.fileId.includes('mp4');
+  // Detect file type from fileId
+  const fileExt = submission.fileId.split('.').pop()?.toLowerCase() || '';
+  const isVideo = ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(fileExt);
+  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'heic', 'webp'].includes(fileExt);
 
   return (
     <div
@@ -43,13 +46,39 @@ export default function SubmissionCard({
         {/* Preview */}
         <div
           onClick={onClick}
-          className="mb-3 bg-neutral-100 rounded-lg h-40 flex items-center justify-center"
+          className="mb-3 bg-neutral-100 rounded-lg h-40 flex items-center justify-center overflow-hidden relative"
         >
-          {isVideo ? (
-            <FileVideo className="w-12 h-12 text-neutral-400" />
-          ) : (
-            <FileImage className="w-12 h-12 text-neutral-400" />
-          )}
+          {isImage ? (
+            <img
+              src={submission.fileDriveUrl}
+              alt={submission.uploaderName}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : isVideo ? (
+            <video
+              src={submission.fileDriveUrl}
+              className="w-full h-full object-cover"
+              preload="metadata"
+              onError={(e) => {
+                // Fallback to icon if video fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          {/* Fallback icon */}
+          <div className={`absolute inset-0 flex items-center justify-center ${isImage || isVideo ? 'hidden' : ''}`}>
+            {isVideo ? (
+              <FileVideo className="w-12 h-12 text-neutral-400" />
+            ) : (
+              <FileImage className="w-12 h-12 text-neutral-400" />
+            )}
+          </div>
         </div>
 
         {/* Info */}

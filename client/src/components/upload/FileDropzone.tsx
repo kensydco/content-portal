@@ -184,12 +184,15 @@ export default function FileDropzone({
         <div className="text-center">
           <Upload className="w-12 h-12 mx-auto text-neutral-400 mb-4" />
           <p className="text-lg font-medium text-neutral-900 mb-2">
-            Drop your file here, or <span className="text-primary-600">browse</span>
+            Drop your files here, or <span className="text-primary-600">browse</span>
+          </p>
+          <p className="text-sm text-neutral-600 mb-1">
+            <strong>Select up to {MAX_FILES} files at once</strong> (or add them one by one)
           </p>
           <p className="text-sm text-neutral-600">
             Supported formats: {allowedTypes.join(', ')}
           </p>
-          <p className="text-sm text-neutral-600">Maximum size: {maxSizeMb}MB</p>
+          <p className="text-sm text-neutral-600">Maximum total size: {maxSizeMb}MB</p>
         </div>
       </div>
 

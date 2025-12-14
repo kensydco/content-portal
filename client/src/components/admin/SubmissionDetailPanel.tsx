@@ -31,6 +31,11 @@ export default function SubmissionDetailPanel({
 
   const canEdit = user?.role === 'Editor' || user?.role === 'SuperAdmin';
 
+  // Detect file type
+  const fileExt = submission.fileId.split('.').pop()?.toLowerCase() || '';
+  const isVideo = ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(fileExt);
+  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'heic', 'webp'].includes(fileExt);
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -77,14 +82,40 @@ export default function SubmissionDetailPanel({
 
         {/* File Preview */}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-2">File</label>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">File Preview</label>
+          <div className="bg-neutral-100 rounded-lg overflow-hidden mb-3">
+            {isImage ? (
+              <img
+                src={submission.fileDriveUrl}
+                alt={submission.uploaderName}
+                className="w-full h-auto"
+                onError={(e) => {
+                  e.currentTarget.src = '';
+                  e.currentTarget.alt = 'Failed to load image';
+                }}
+              />
+            ) : isVideo ? (
+              <video
+                src={submission.fileDriveUrl}
+                controls
+                className="w-full h-auto"
+                preload="metadata"
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <div className="p-12 text-center text-neutral-500">
+                No preview available for this file type
+              </div>
+            )}
+          </div>
           <a
             href={submission.fileDriveUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-primary-600 hover:text-primary-700"
           >
-            View in Google Drive <ExternalLink className="w-4 h-4" />
+            View in Cloud Storage <ExternalLink className="w-4 h-4" />
           </a>
           <p className="text-sm text-neutral-600 mt-1">Size: {submission.fileSizeMb.toFixed(2)} MB</p>
         </div>

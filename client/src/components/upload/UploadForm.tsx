@@ -55,10 +55,14 @@ export default function UploadForm() {
       }
     });
 
-    // Load categories
-    api.get('/api/config/public').then(() => {
-      // For public use, we'll fetch categories from a different endpoint
-      // For now, we'll create a simple list
+    // Load categories from Google Sheets
+    api.get('/api/config/public/categories').then((res) => {
+      if (res.data.success && res.data.data.categories) {
+        setCategories(res.data.data.categories);
+      }
+    }).catch((err) => {
+      console.error('Failed to load categories:', err);
+      // Fallback to default categories
       setCategories([
         { id: '1', name: 'Workout', description: null, isActive: true, createdAt: '' },
         { id: '2', name: 'Event', description: null, isActive: true, createdAt: '' },
@@ -66,13 +70,14 @@ export default function UploadForm() {
       ]);
     });
 
-    // Load studios
-    api.get('/api/studios/public').then((res) => {
-      if (res.data.success) {
+    // Load studios from Google Sheets
+    api.get('/api/config/public/studios').then((res) => {
+      if (res.data.success && res.data.data.studios) {
         setStudios(res.data.data.studios);
       }
-    }).catch(() => {
-      // Fallback if endpoint doesn't exist yet
+    }).catch((err) => {
+      console.error('Failed to load studios:', err);
+      // Fallback to default studios
       setStudios([
         { id: 'TN0045', name: 'Collierville' },
         { id: 'NY0017', name: 'Ithaca' },
